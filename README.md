@@ -2,7 +2,7 @@
 
 A business analysis case study on GST Input Tax Credit reconciliation for small Indian businesses, with a working prototype.
 
-**Live demo:** https://YOUR-GITHUB-USERNAME.github.io/itc-recon-desk/
+**Live demo:** https://YOUR-GITHUB-kriti882.github.io/itc-recon-desk/
 
 ## The problem
 
