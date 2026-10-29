@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>ITC Recon Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a BA case-study dossier. Narrow reading column for the documents, full-width working desk for the live reconciliation. */
+:root{
+  --bg:#f3f6f5; --surface:#ffffff; --sunk:#e8eeec; --line:#d3ddd9; --ink:#14201c; --muted:#56675f;
+  --accent:#0b6b68; --accent-soft:#d6ecea;
+  --ok:#1f7a3f; --ok-soft:#dcefe2; --warn:#a15c00; --warn-soft:#f8ead2; --crit:#b3261e; --crit-soft:#f7dedb; --info:#3b55a0; --info-soft:#e0e6f6;
+  --f-display:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1614; --surface:#16201d; --sunk:#1c2925; --line:#2b3a35; --ink:#e3ece8; --muted:#9db0a8;
+  --accent:#4fc2bc; --accent-soft:#16403e;
+  --ok:#5cc27e; --ok-soft:#173826; --warn:#e3a54a; --warn-soft:#3d2c12; --crit:#f08077; --crit-soft:#45201d; --info:#93a9ec; --info-soft:#202b4a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1614; --surface:#16201d; --sunk:#1c2925; --line:#2b3a35; --ink:#e3ece8; --muted:#9db0a8;
+  --accent:#4fc2bc; --accent-soft:#16403e;
+  --ok:#5cc27e; --ok-soft:#173826; --warn:#e3a54a; --warn-soft:#3d2c12; --crit:#f08077; --crit-soft:#45201d; --info:#93a9ec; --info-soft:#202b4a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.prose{max-width:70ch}
+h1,h2,h3{font-family:var(--f-display);font-weight:650;line-height:1.2;text-wrap:balance;margin:0}
+h1{font-size:clamp(2rem,4.5vw,3rem)}
+h2{font-size:1.75rem}
+h3{font-size:1.15rem}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.85em}
+.num{font-variant-numeric:tabular-nums}
+
+/* header */
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+header.top .wrap{padding-block:48px 32px;display:grid;gap:18px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 24px;color:var(--muted);font-size:.9rem}
+.meta b{color:var(--ink);font-weight:600}
+.note{font-size:.85rem;color:var(--muted);border-left:3px solid var(--line);padding-left:12px}
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+nav.toc .wrap{display:flex;gap:4px;overflow-x:auto;padding-block:8px;scrollbar-width:thin}
+nav.toc a{flex:none;text-decoration:none;color:var(--muted);font-size:.85rem;font-weight:500;padding:6px 10px;border-radius:6px}
+nav.toc a:hover{background:var(--sunk);color:var(--ink)}
+
+section{padding-block:56px;border-bottom:1px solid var(--line)}
+section > .wrap{display:grid;gap:24px}
+.sec-head{display:grid;gap:6px}
+
+/* grids */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:20px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px}
+.grid2>*,.grid3>*{min-width:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;gap:10px;align-content:start}
+ul.clean{margin:0;padding-left:18px;display:grid;gap:6px}
+
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.kpi{background:var(--surface);padding:16px;display:grid;gap:4px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:1.6rem;font-weight:650;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi .l{font-size:.8rem;color:var(--muted)}
+.kpi.crit .v{color:var(--crit)} .kpi.ok .v{color:var(--ok)} .kpi.acc .v{color:var(--accent)}
+
+/* tables */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--sunk);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td.r,th.r{text-align:right}
+td.nw{white-space:nowrap}
+
+/* pills */
+.pill{display:inline-block;font-size:.75rem;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.s-ok{background:var(--ok-soft);color:var(--ok)}
+.s-info{background:var(--info-soft);color:var(--info)}
+.s-warn{background:var(--warn-soft);color:var(--warn)}
+.s-crit{background:var(--crit-soft);color:var(--crit)}
+.s-acc{background:var(--accent-soft);color:var(--accent)}
+.pri{font-family:var(--f-mono);font-size:.72rem;font-weight:500;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+
+/* desk */
+.desk{background:var(--sunk)}
+.controls{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end}
+.field{display:grid;gap:4px;font-size:.8rem;color:var(--muted)}
+select,input[type=number],input[type=search]{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 10px}
+input[type=number]{width:90px}
+button{font:inherit;font-size:.85rem;font-weight:600;cursor:pointer;border-radius:6px;padding:7px 12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.8rem;font-weight:500;padding:4px 10px;border-radius:999px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--ink);font-family:var(--f-body);font-size:12px}
+.chart .muted{fill:var(--muted)}
+.upload{display:grid;gap:12px}
+.upload .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.msg{font-size:.85rem}
+.msg.err{color:var(--crit)} .msg.okm{color:var(--ok)}
+code{font-family:var(--f-mono);font-size:.85em;background:var(--sunk);padding:1px 5px;border-radius:4px}
+pre.mermaid{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto;margin:0}
+.gherkin{font-family:var(--f-mono);font-size:.8rem;line-height:1.55;background:var(--sunk);border-radius:6px;padding:10px 12px;white-space:pre-wrap;margin:0}
+.gherkin b{color:var(--accent);font-weight:500}
+.story .who{font-size:.95rem}
+.res{font-family:var(--f-mono);font-size:.78rem}
+footer{padding-block:40px;color:var(--muted);font-size:.85rem}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+html{scroll-behavior:smooth;scroll-padding-top:56px}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <span class="eyebrow">Business analysis case study · FinTech · Indian GST</span>
+    <h1>ITC Recon Desk</h1>
+    <p class="prose" style="font-size:1.1rem">I designed this tool for small-business accountants. It checks their purchase register against GSTR-2B, shows how much Input Tax Credit is at risk before GSTR-3B is due, and tells them which vendors to follow up with first.</p>
+    <div class="meta">
+      <span>Analyst <b>Kriti Sharma</b></span>
+      <span>Role <b>Business Analyst (end to end)</b></span>
+      <span>Period analysed <b>Jul – Sep 2026 (FY 2026-27)</b></span>
+      <span>Version <b>1.0 · Oct 2026</b></span>
+    </div>
+    <p class="note prose">This is a personal portfolio project. Every vendor, GSTIN and invoice here is made-up sample data that your browser generates, so no real taxpayer data is involved. You can also try the prototype in section 5 with your own CSV files. They stay on your computer.</p>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <a href="#overview">1 Summary</a><a href="#research">2 Research</a><a href="#personas">3 Users</a><a href="#process">4 Process</a><a href="#analysis">5 Live analysis</a><a href="#brd">6 BRD</a><a href="#frd">7 FRD</a><a href="#stories">8 User stories</a><a href="#rtm">9 Traceability</a><a href="#uat">10 UAT</a><a href="#roadmap">11 KPIs &amp; roadmap</a><a href="#learned">12 What I learned</a>
+  </div>
+</nav>
+
+<!-- 1 -->
+<section id="overview"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">1 · Executive summary</span><h2>Why I picked this problem</h2></div>
+  <p class="prose">During my finance internship I spent many hours matching records line by line in Excel. Later, as a Business Analyst, I reviewed accounting software like Tally, QuickBooks and Zoho, and I kept noticing the same gap. These tools are good at recording purchases, but they do little to help an accountant work out which purchases will actually get tax credit. I wanted to see how far careful requirements work and a simple set of matching rules could close that gap.</p>
+  <p class="prose">Here is the problem. A business can only claim Input Tax Credit (ITC) on purchase invoices its suppliers have reported, which appear in the auto-drafted GSTR-2B statement. Most small businesses check this by hand in Excel, using VLOOKUP between their purchase register and a 2B download. Invoice numbers are written differently on each side, GSTINs get typed wrong, and vendors file late. Mismatches are found after GSTR-3B is filed, or not at all, and the business either loses credit or pays interest on a reversal.</p>
+  <div class="grid3">
+    <div class="panel"><span class="eyebrow">Objective</span><p>Cut monthly reconciliation from days of manual matching to a reviewed exception list, and show ITC at risk before the GSTR-3B due date.</p></div>
+    <div class="panel"><span class="eyebrow">What I made</span><p>The full set of BA documents I would hand to a product team: research, personas, process maps, BRD, FRD, user stories, a traceability matrix and UAT cases. I also built a working prototype so the rules could be tested rather than only described.</p></div>
+    <div class="panel"><span class="eyebrow">Result on sample data</span><p id="sumLine">Calculating…</p></div>
+  </div>
+</div></section>
+
+<!-- 2 -->
+<section id="research"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">2 · Research</span><h2>Context, method and hypotheses</h2></div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>Regulatory context</h3>
+      <ul class="clean">
+        <li>Section 16(2)(aa) of the CGST Act and Rule 36(4) limit ITC to invoices the supplier has reported, as reflected in GSTR-2B.</li>
+        <li>GSTR-2B is a static, monthly statement built from suppliers' GSTR-1 / IFF filings.</li>
+        <li>Since October 2024 the Invoice Management System (IMS) lets the recipient accept, reject or keep each supplier invoice pending before 2B is finalised. That makes early, invoice-level review more valuable.</li>
+        <li>After the September 2025 rate rationalisation, most goods sit in the 5% and 18% slabs, which the sample data reflects.</li>
+      </ul>
+      <p class="note">Primary sources: <a href="https://www.gst.gov.in" target="_blank" rel="noopener">gst.gov.in</a> and <a href="https://cbic-gst.gov.in" target="_blank" rel="noopener">cbic-gst.gov.in</a>.</p>
+    </div>
+    <div class="panel">
+      <h3>Method</h3>
+      <ul class="clean">
+        <li><b>Desk research:</b> GST portal advisories, CBIC rules, and feature reviews of Tally, Zoho Books, QuickBooks and ClearTax-style tools (from my product-review work at Meru Accounting).</li>
+        <li><b>Data simulation:</b> a 40-vendor, three-month purchase register with error patterns seen in practice (format drift, typos, late filers).</li>
+        <li><b>Gap analysis:</b> mapped what accountants do by hand against what tools automate.</li>
+        <li><b>Next step:</b> I plan to interview 6–8 MSME accountants and CA-firm staff using the guide below. Until then I am treating the personas as educated guesses, not facts.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="panel">
+      <h3>Hypotheses to test</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>#</th><th>Hypothesis</th><th>Measured by</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">H1</td><td>Most "mismatches" are formatting differences, not real errors.</td><td>Share of exact-key misses that match after normalisation</td></tr>
+          <tr><td class="mono">H2</td><td>A small group of vendors causes most of the ITC at risk.</td><td>Top-5 vendors' share of ITC at risk</td></tr>
+          <tr><td class="mono">H3</td><td>Accountants need a vendor follow-up list more than an invoice list.</td><td>Interview ranking of outputs</td></tr>
+          <tr><td class="mono">H4</td><td>Reconciliation happens too late, after 3B is filed.</td><td>Interview: day of month reconciliation is done</td></tr>
+        </tbody>
+      </table></div>
+      <p id="hypoOut" class="msg"></p>
+    </div>
+    <div class="panel">
+      <h3>Interview guide (excerpt)</h3>
+      <ol class="clean">
+        <li>Walk me through the last time you reconciled purchases with 2B. Which files, which steps?</li>
+        <li>How long did it take, and which part took longest?</li>
+        <li>What do you do when an invoice is in your books but not in 2B?</li>
+        <li>How do you track which vendors you have already reminded?</li>
+        <li>On what date do you usually finish, compared with the GSTR-3B due date?</li>
+        <li>If one screen could show you only one thing, what would it be?</li>
+      </ol>
+    </div>
+  </div>
+</div></section>
+
+<!-- 3 -->
+<section id="personas"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">3 · Users and stakeholders</span><h2>Proto-personas</h2><p class="prose" style="color:var(--muted)">Assumption-based, to be validated in interviews.</p></div>
+  <div class="grid3">
+    <div class="panel"><span class="pill s-acc">Primary</span><h3>Accounts executive, MSME manufacturer</h3><p>Books 150–300 purchase invoices a month in Tally. Reconciles in Excel in the week before the 20th.</p><p><b>Needs:</b> one list of what to fix, in priority order.</p><p><b>Pain:</b> invoice-number formats never match; no record of vendor reminders.</p></div>
+    <div class="panel"><span class="pill s-info">Secondary</span><h3>Article assistant, CA firm</h3><p>Handles reconciliation for 20–40 clients. Gets data late and in different formats.</p><p><b>Needs:</b> a repeatable template and a summary to send the client.</p><p><b>Pain:</b> rework when a client sends a corrected register.</p></div>
+    <div class="panel"><span class="pill s-warn">Decision maker</span><h3>Owner / finance head</h3><p>Signs off on GSTR-3B. Cares about cash and notices, not invoice detail.</p><p><b>Needs:</b> one number for ITC at risk and which vendors cause it.</p><p><b>Pain:</b> finds out about reversals from a notice.</p></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>Stakeholder</th><th>Interest</th><th>Influence</th><th>Engagement</th></tr></thead>
+    <tbody>
+      <tr><td>Accounts executive</td><td>High</td><td>Medium</td><td>Co-design, UAT</td></tr>
+      <tr><td>Owner / finance head</td><td>High</td><td>High</td><td>Sign-off on scope and KPIs</td></tr>
+      <tr><td>CA / tax consultant</td><td>Medium</td><td>High</td><td>Validate business rules</td></tr>
+      <tr><td>Vendors (suppliers)</td><td>Low</td><td>Medium</td><td>Receive follow-up requests</td></tr>
+      <tr><td>Product and development team</td><td>Medium</td><td>High</td><td>Backlog refinement, estimates</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<!-- 4 -->
+<section id="process"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">4 · Process analysis</span><h2>AS-IS and TO-BE</h2></div>
+  <div class="grid2">
+    <div class="panel"><h3>AS-IS (manual)</h3>
+<pre class="mermaid">
+flowchart TD
+  A[Export purchase register from Tally] --> B[Download GSTR-2B Excel]
+  B --> C[Clean invoice numbers by hand]
+  C --> D[VLOOKUP on invoice number]
+  D --> E{Found?}
+  E -- Yes --> F[Eyeball tax amount]
+  E -- No --> G[Search manually in 2B]
+  G --> H[Note in a side sheet]
+  F --> I[File GSTR-3B]
+  H --> I
+  I --> J[Chase vendors by memory]
+</pre>
+      <p class="note">Pain points: format cleaning is manual, value differences are checked by eye, vendor follow-up has no owner, and the work finishes close to or after the due date.</p>
+    </div>
+    <div class="panel"><h3>TO-BE (ITC Recon Desk)</h3>
+<pre class="mermaid">
+flowchart TD
+  A[Upload register and 2B CSV] --> B[Validate GSTINs and columns]
+  B --> C[Normalise invoice numbers]
+  C --> D[Match on GSTIN + invoice]
+  D --> E[Classify exceptions with tolerance]
+  E --> F[ITC-at-risk summary]
+  E --> G[Vendor follow-up list]
+  F --> H[Review and act in IMS]
+  G --> H
+  H --> I[File GSTR-3B by the 20th]
+</pre>
+      <p class="note">Gains: rules replace manual cleaning, every exception has a type and an action, and risk is visible before filing.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 5 -->
+<section id="analysis" class="desk"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">5 · Working prototype and data analysis</span><h2>Reconciliation desk</h2><p class="prose" style="color:var(--muted)">The matching engine below implements the business rules in section 6. It runs on synthetic sample data by default.</p></div>
+
+  <div class="controls">
+    <label class="field" for="fMonth">Month
+      <select id="fMonth"><option value="all">Jul – Sep 2026</option><option value="7">Jul 2026</option><option value="8">Aug 2026</option><option value="9">Sep 2026</option></select>
+    </label>
+    <label class="field" for="fTol">Tax tolerance (₹)
+      <input id="fTol" type="number" min="0" step="0.5" value="1">
+    </label>
+    <span id="srcLabel" class="pill s-acc">Sample data</span>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2">
+    <div class="panel chart"><h3>Exceptions by type</h3><div id="chStatus"></div></div>
+    <div class="panel chart"><h3>ITC at risk by month</h3><div id="chMonth"></div></div>
+  </div>
+
+  <div class="panel">
+    <h3>Vendor follow-up list</h3>
+    <p class="note">Ranked by ITC at risk. Rating: A ≥ 95% clean, B ≥ 80%, C below 80%.</p>
+    <div class="tbl"><table id="tVendor"></table></div>
+  </div>
+
+  <div class="panel">
+    <h3>Invoice-level results</h3>
+    <div class="controls">
+      <div class="chips" id="chips" role="group" aria-label="Filter by status"></div>
+      <label class="field" for="fSearch">Search vendor, GSTIN or invoice
+        <input id="fSearch" type="search" placeholder="e.g. Polymers">
+      </label>
+    </div>
+    <div class="tbl"><table id="tRows"></table></div>
+    <div><button id="more">Show 40 more</button> <span id="rowCount" class="msg" style="color:var(--muted)"></span></div>
+  </div>
+
+  <div class="panel upload">
+    <h3>Run it on your own files</h3>
+    <p class="prose">Two CSV files with these columns: <code>gstin</code>, <code>invoice_no</code>, <code>invoice_date</code>, <code>taxable_value</code>, <code>tax_amount</code>, and optionally <code>vendor_name</code>. The 2B file may add <code>period</code> as <code>YYYY-MM</code>. Dates can be <code>YYYY-MM-DD</code> or <code>DD-MM-YYYY</code>.</p>
+    <div class="row">
+      <label class="field" for="upBooks">Purchase register CSV <input id="upBooks" type="file" accept=".csv,text/csv"></label>
+      <label class="field" for="up2b">GSTR-2B CSV <input id="up2b" type="file" accept=".csv,text/csv"></label>
+    </div>
+    <div class="row">
+      <button class="primary" id="runUp">Reconcile my files</button>
+      <button id="resetSample">Back to sample data</button>
+      <button id="copyBooks">Copy sample register CSV</button>
+      <button id="copy2b">Copy sample 2B CSV</button>
+    </div>
+    <p id="upMsg" class="msg" role="status"></p>
+  </div>
+</div></section>
+
+<!-- 6 -->
+<section id="brd"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">6 · Business Requirements Document (summary)</span><h2>BRD</h2></div>
+  <div class="grid2">
+    <div class="panel"><h3>Business objectives</h3>
+      <ul class="clean">
+        <li><b>BO-1</b> Identify ITC at risk before the GSTR-3B due date every month.</li>
+        <li><b>BO-2</b> Reduce manual reconciliation effort by at least 70%.</li>
+        <li><b>BO-3</b> Give every exception an owner and a next action.</li>
+        <li><b>BO-4</b> Recover credit for supplier invoices that were never booked.</li>
+      </ul>
+    </div>
+    <div class="panel"><h3>Scope</h3>
+      <p><b>In scope:</b> B2B purchase invoices, CSV import of register and GSTR-2B, matching, exception classification, vendor summary.</p>
+      <p><b>Out of scope (v1):</b> credit/debit notes, imports (IMPG), direct GSTN API connection, e-invoice IRN validation, auto-filing.</p>
+    </div>
+  </div>
+  <div class="panel"><h3>Business rules</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>ID</th><th>Rule</th><th>Exception raised</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">BR-01</td><td>Invoice numbers are compared after normalisation: uppercase, split on symbols and spaces, leading zeros removed from each part.</td><td>None (enables match)</td></tr>
+        <tr><td class="mono">BR-02</td><td>Same GSTIN and invoice, tax difference within tolerance (default ₹1).</td><td><span class="pill s-ok">Matched</span></td></tr>
+        <tr><td class="mono">BR-03</td><td>Same GSTIN and invoice, tax difference above tolerance. Excess claimed counts as ITC at risk.</td><td><span class="pill s-warn">Value mismatch</span></td></tr>
+        <tr><td class="mono">BR-04</td><td>Matched, but the 2B period is later than the books month. Credit is available in the later period.</td><td><span class="pill s-info">Period mismatch</span></td></tr>
+        <tr><td class="mono">BR-05</td><td>Same invoice and tax, GSTIN differs by 1–2 characters.</td><td><span class="pill s-crit">GSTIN mismatch</span></td></tr>
+        <tr><td class="mono">BR-06</td><td>Same GSTIN, invoice differs by one character, tax within tolerance. Needs human review.</td><td><span class="pill s-info">Probable match</span></td></tr>
+        <tr><td class="mono">BR-07</td><td>Invoice in books, nothing in 2B. Full tax is at risk.</td><td><span class="pill s-crit">Missing in 2B</span></td></tr>
+        <tr><td class="mono">BR-08</td><td>Invoice in 2B, not in books. Credit may be unclaimed.</td><td><span class="pill s-acc">Missing in books</span></td></tr>
+        <tr><td class="mono">BR-09</td><td>Same GSTIN and invoice booked more than once.</td><td><span class="pill s-crit">Duplicate in books</span></td></tr>
+        <tr><td class="mono">BR-10</td><td>GSTIN must pass format and check-digit validation.</td><td>Flag on the row</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="grid2">
+    <div class="panel"><h3>Assumptions</h3><ul class="clean"><li>Users can export the purchase register and 2B to CSV.</li><li>One GSTIN per legal entity per state.</li><li>The CA or tax consultant signs off tolerance values.</li></ul></div>
+    <div class="panel"><h3>Constraints</h3><ul class="clean"><li>Taxpayer data stays on the user's machine in v1 (data privacy).</li><li>Must handle 5,000 invoices a month without noticeable delay.</li><li>Outputs must be explainable to an auditor: every status links to a rule ID.</li></ul></div>
+  </div>
+</div></section>
+
+<!-- 7 -->
+<section id="frd"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">7 · Functional Requirements Document (summary)</span><h2>FRD</h2><p class="prose" style="color:var(--muted)">Priority uses MoSCoW: M must, S should, C could.</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>ID</th><th>Requirement</th><th>Pri</th><th>Rule</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">FR-01</td><td>Import purchase register and GSTR-2B as CSV; map known column aliases automatically.</td><td><span class="pri">M</span></td><td class="mono">–</td></tr>
+      <tr><td class="mono">FR-02</td><td>Reject files with missing required columns and say which column is missing.</td><td><span class="pri">M</span></td><td class="mono">–</td></tr>
+      <tr><td class="mono">FR-03</td><td>Validate each GSTIN's format and check digit; flag invalid ones.</td><td><span class="pri">M</span></td><td class="mono">BR-10</td></tr>
+      <tr><td class="mono">FR-04</td><td>Normalise invoice numbers before matching.</td><td><span class="pri">M</span></td><td class="mono">BR-01</td></tr>
+      <tr><td class="mono">FR-05</td><td>Match on GSTIN + invoice and classify each row into one of eight statuses.</td><td><span class="pri">M</span></td><td class="mono">BR-02…09</td></tr>
+      <tr><td class="mono">FR-06</td><td>Let the user set the tax tolerance in rupees; re-run instantly.</td><td><span class="pri">M</span></td><td class="mono">BR-02/03</td></tr>
+      <tr><td class="mono">FR-07</td><td>Show summary KPIs: match rate, ITC claimed, ITC at risk, unclaimed ITC.</td><td><span class="pri">M</span></td><td class="mono">–</td></tr>
+      <tr><td class="mono">FR-08</td><td>Rank vendors by ITC at risk with a compliance rating.</td><td><span class="pri">S</span></td><td class="mono">–</td></tr>
+      <tr><td class="mono">FR-09</td><td>Filter results by month, status and free-text search.</td><td><span class="pri">S</span></td><td class="mono">–</td></tr>
+      <tr><td class="mono">FR-10</td><td>Show a recommended action for every exception.</td><td><span class="pri">S</span></td><td class="mono">–</td></tr>
+      <tr><td class="mono">FR-11</td><td>Export the exception list and vendor summary to Excel.</td><td><span class="pri">C</span></td><td class="mono">–</td></tr>
+      <tr><td class="mono">FR-12</td><td>Draft a vendor reminder email listing that vendor's open invoices.</td><td><span class="pri">C</span></td><td class="mono">–</td></tr>
+    </tbody>
+  </table></div>
+  <div class="panel"><h3>Non-functional requirements</h3>
+    <ul class="clean"><li><b>NFR-01 Performance:</b> 5,000 × 5,000 rows reconciled in under 3 seconds on a standard laptop.</li><li><b>NFR-02 Privacy:</b> no upload to a server in v1.</li><li><b>NFR-03 Auditability:</b> each result shows its rule ID and both source values.</li><li><b>NFR-04 Usability:</b> a first-time user completes a run in under 5 minutes without training.</li></ul>
+  </div>
+</div></section>
+
+<!-- 8 -->
+<section id="stories"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">8 · Product backlog</span><h2>User stories with acceptance criteria</h2></div>
+  <div class="grid2">
+    <div class="panel story"><span class="mono">US-01 · FR-01, FR-02</span><p class="who">As an <b>accounts executive</b>, I want to upload my register and 2B as CSV so that I don't have to clean them in Excel first.</p>
+<pre class="gherkin"><b>Given</b> a 2B file without the tax_amount column
+<b>When</b> I click Reconcile
+<b>Then</b> I see "2B file is missing: tax_amount"
+<b>And</b> no results are shown</pre></div>
+    <div class="panel story"><span class="mono">US-02 · FR-04, FR-05</span><p class="who">As an <b>accounts executive</b>, I want invoice numbers matched regardless of format so that "INV/007" and "inv-7" are not reported as missing.</p>
+<pre class="gherkin"><b>Given</b> books invoice "INV/26-27/0045"
+<b>And</b> 2B invoice "INV-26-27-45" for the same GSTIN
+<b>When</b> reconciliation runs
+<b>Then</b> the status is Matched</pre></div>
+    <div class="panel story"><span class="mono">US-03 · FR-06</span><p class="who">As a <b>CA consultant</b>, I want to set a rupee tolerance so that paise-level rounding is not flagged.</p>
+<pre class="gherkin"><b>Given</b> tolerance ₹1 and a tax difference of ₹0.80
+<b>Then</b> the status is Matched
+<b>Given</b> a tax difference of ₹250
+<b>Then</b> the status is Value mismatch
+<b>And</b> ₹250 is added to ITC at risk</pre></div>
+    <div class="panel story"><span class="mono">US-04 · FR-07</span><p class="who">As an <b>owner</b>, I want one ITC-at-risk number before the 20th so that I can decide whether to defer credit.</p>
+<pre class="gherkin"><b>Given</b> a completed reconciliation
+<b>Then</b> the summary shows ITC at risk in ₹
+<b>And</b> it equals the sum of at-risk amounts
+    across all exception rows</pre></div>
+    <div class="panel story"><span class="mono">US-05 · FR-08, FR-10</span><p class="who">As an <b>accounts executive</b>, I want vendors ranked by risk so that I chase the biggest problems first.</p>
+<pre class="gherkin"><b>Given</b> vendors with open exceptions
+<b>Then</b> the list is sorted by ITC at risk, highest first
+<b>And</b> each vendor shows a rating A, B or C</pre></div>
+    <div class="panel story"><span class="mono">US-06 · FR-03, FR-05</span><p class="who">As an <b>article assistant</b>, I want wrongly typed GSTINs caught so that credit isn't lost to a data-entry error.</p>
+<pre class="gherkin"><b>Given</b> books GSTIN differs from 2B by one character
+<b>And</b> invoice and tax are the same
+<b>Then</b> the status is GSTIN mismatch
+<b>And</b> the row is flagged "Invalid GSTIN" if the
+    check digit fails</pre></div>
+  </div>
+</div></section>
+
+<!-- 9 -->
+<section id="rtm"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">9 · Requirements Traceability Matrix</span><h2>From objective to test</h2></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Objective</th><th>Requirement</th><th>Rule</th><th>User story</th><th>Test case</th><th>Status</th></tr></thead>
+    <tbody id="rtmBody"></tbody>
+  </table></div>
+</div></section>
+
+<!-- 10 -->
+<section id="uat"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">10 · User Acceptance Testing</span><h2>Test cases, run live against the engine</h2><p class="prose" style="color:var(--muted)">Each case builds a small fixture, runs the same matching code used in section 5, and compares the result with the expected status.</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>ID</th><th>Scenario</th><th>Expected</th><th>Actual</th><th>Result</th></tr></thead>
+    <tbody id="uatBody"></tbody>
+  </table></div>
+</div></section>
+
+<!-- 11 -->
+<section id="roadmap"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">11 · Success measures and roadmap</span><h2>KPIs, risks and next releases</h2></div>
+  <div class="tbl"><table>
+    <thead><tr><th>KPI</th><th>Baseline (to measure)</th><th>Target</th></tr></thead>
+    <tbody>
+      <tr><td>Time to reconcile one month</td><td>Interview estimate</td><td>Under 2 hours including review</td></tr>
+      <tr><td>Auto-classified rows</td><td>0% (manual)</td><td>100% of rows get a status</td></tr>
+      <tr><td>Exact-match rate after normalisation</td><td id="kpiMatch">–</td><td>≥ 90% for vendors rated A</td></tr>
+      <tr><td>Reconciliation finished before the 20th</td><td>Interview estimate</td><td>Every month</td></tr>
+      <tr><td>ITC reversed after a notice</td><td>Client history</td><td>Down 50% year on year</td></tr>
+    </tbody>
+  </table></div>
+  <div class="grid2">
+    <div class="panel"><h3>Risks</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr><td>Fuzzy matching pairs the wrong invoices</td><td>Fuzzy results are labelled for review, never auto-accepted</td></tr>
+          <tr><td>Export formats differ across Tally, Busy and Zoho</td><td>Column alias map; template file</td></tr>
+          <tr><td>Rule changes on the GST portal</td><td>Rules kept in one table with IDs, reviewed quarterly with a CA</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="panel"><h3>Roadmap</h3>
+      <ul class="clean">
+        <li><b>v1.0 (this prototype):</b> CSV matching, eight statuses, vendor ranking.</li>
+        <li><b>v1.1:</b> Excel export, vendor reminder drafts, credit and debit notes.</li>
+        <li><b>v2.0:</b> IMS action suggestions (accept, reject, pending) per invoice; GSP/API connection.</li>
+        <li><b>v2.1:</b> Multi-client view for CA firms; month-on-month vendor trend.</li>
+      </ul>
+    </div>
+  </div>
+</div></section>
+
+<section id="learned"><div class="wrap">
+  <div class="sec-head"><span class="eyebrow">12 · Reflection</span><h2>What I learned</h2></div>
+  <div class="grid3">
+    <div class="panel"><h3>Rules beat guesswork</h3><p>When I wrote every matching rule down with an ID, the gaps became obvious. One example: what happens when the invoice matches but the GSTIN is one character off? Writing it down forced a decision.</p></div>
+    <div class="panel"><h3>Tests keep the documents honest</h3><p>Linking each user story to a test case that actually runs showed me which requirements were vague. If I couldn't write a test for a story, the story wasn't finished.</p></div>
+    <div class="panel"><h3>The user wants a to-do list</h3><p>I started out planning a big dashboard. Thinking through the accountant's month changed my mind: what they need most is a short list of which vendors to chase, in order.</p></div>
+  </div>
+  <p class="prose">I'd love feedback from anyone who reconciles GST every month, especially on what I've got wrong. You can reach me on <a href="https://www.linkedin.com/in/kriti-sharma-7h25k" target="_blank" rel="noopener">LinkedIn</a>.</p>
+</div></section>
+
+<footer><div class="wrap">ITC Recon Desk · Business analysis case study by Kriti Sharma · Synthetic data, for portfolio use. Not tax advice.</div></footer>
+
+<script>
+(function(){
+"use strict";
+const CH="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const MONTHS={7:"Jul",8:"Aug",9:"Sep",10:"Oct",11:"Nov",12:"Dec",1:"Jan",2:"Feb",3:"Mar",4:"Apr",5:"May",6:"Jun"};
+const inr=new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0});
+const inr2=new Intl.NumberFormat("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const STATUS={
+  "Matched":{cls:"s-ok",rule:"BR-02",act:"No action. Claim ITC."},
+  "Period mismatch":{cls:"s-info",rule:"BR-04",act:"Claim in the 2B period shown."},
+  "Probable match":{cls:"s-info",rule:"BR-06",act:"Check invoice copy, correct the number in books."},
+  "Value mismatch":{cls:"s-warn",rule:"BR-03",act:"Ask vendor to amend GSTR-1 or claim the 2B value."},
+  "GSTIN mismatch":{cls:"s-crit",rule:"BR-05",act:"Correct GSTIN in books, or ask vendor to amend."},
+  "Missing in 2B":{cls:"s-crit",rule:"BR-07",act:"Ask vendor to file GSTR-1; defer ITC."},
+  "Duplicate in books":{cls:"s-crit",rule:"BR-09",act:"Remove the duplicate entry from the register."},
+  "Missing in books":{cls:"s-acc",rule:"BR-08",act:"Check if invoice was received; book it to claim ITC."}
+};
+const ORDER=["Matched","Period mismatch","Probable match","Value mismatch","GSTIN mismatch","Missing in 2B","Duplicate in books","Missing in books"];
+const BAR={ "s-ok":"--ok","s-info":"--info","s-warn":"--warn","s-crit":"--crit","s-acc":"--accent"};
+
+/* ---------- GSTIN ---------- */
+function gstinCheck(s14){let sum=0;for(let i=0;i<14;i++){const v=CH.indexOf(s14[i]);const p=v*(i%2?2:1);sum+=Math.floor(p/36)+p%36;}return CH[(36-sum%36)%36];}
+function validGSTIN(g){return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g)&&gstinCheck(g.slice(0,14))===g[14];}
+function hamming(a,b){if(a.length!==b.length)return 99;let d=0;for(let i=0;i<a.length;i++)if(a[i]!==b[i])d++;return d;}
+function lev(a,b){if(Math.abs(a.length-b.length)>1)return 9;const m=a.length,n=b.length;let prev=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const cur=[i];for(let j=1;j<=n;j++)cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));prev=cur;}return prev[n];}
+function normInv(s){return String(s||"").toUpperCase().split(/[^A-Z0-9]+/).filter(Boolean).map(p=>/^\d+$/.test(p)?(p.replace(/^0+/,"")||"0"):p).join("");}
+
+/* ---------- engine ---------- */
+function reconcile(books,twob,tol){
+  const res=[];const used=new Set();
+  const byKey=new Map(),byInv=new Map(),byG=new Map();
+  twob.forEach((t,i)=>{t._n=normInv(t.inv);const k=t.gstin+"|"+t._n;
+    (byKey.get(k)||byKey.set(k,[]).get(k)).push(i);
+    (byInv.get(t._n)||byInv.set(t._n,[]).get(t._n)).push(i);
+    (byG.get(t.gstin)||byG.set(t.gstin,[]).get(t.gstin)).push(i);});
+  const seen=new Set();
+  const take=list=>{if(!list)return -1;for(const i of list)if(!used.has(i)){used.add(i);return i;}return -1;};
+  for(const b of books){
+    const n=normInv(b.inv);const k=b.gstin+"|"+n;
+    const row={vendor:b.vendor,gstin:b.gstin,binv:b.inv,tinv:"",date:b.date,period:b.period,btax:b.tax,ttax:null,diff:null,risk:0,unclaimed:0,invalid:!validGSTIN(b.gstin)};
+    if(seen.has(k)){row.status="Duplicate in books";row.risk=b.tax;res.push(row);continue;}
+    seen.add(k);
+    let i=take(byKey.get(k));
+    if(i>=0){const t=twob[i];row.tinv=t.inv;row.ttax=t.tax;row.diff=+(b.tax-t.tax).toFixed(2);row.tperiod=t.period;
+      if(Math.abs(row.diff)>tol){row.status="Value mismatch";row.risk=Math.max(row.diff,0);}
+      else if(t.period>b.period){row.status="Period mismatch";}
+      else row.status="Matched";
+      res.push(row);continue;}
+    // GSTIN typo: same invoice, close GSTIN, same tax
+    i=-1;for(const j of (byInv.get(n)||[])){const t=twob[j];if(!used.has(j)&&hamming(t.gstin,b.gstin)<=2&&Math.abs(t.tax-b.tax)<=tol){i=j;break;}}
+    if(i>=0){used.add(i);const t=twob[i];row.tinv=t.inv;row.ttax=t.tax;row.diff=+(b.tax-t.tax).toFixed(2);row.status="GSTIN mismatch";row.risk=b.tax;row.note="2B GSTIN "+t.gstin;res.push(row);continue;}
+    // invoice typo: same GSTIN, invoice 1 edit away, same tax
+    for(const j of (byG.get(b.gstin)||[])){const t=twob[j];if(!used.has(j)&&lev(t._n,n)===1&&Math.abs(t.tax-b.tax)<=tol){i=j;break;}}
+    if(i>=0){used.add(i);const t=twob[i];row.tinv=t.inv;row.ttax=t.tax;row.diff=+(b.tax-t.tax).toFixed(2);row.status="Probable match";res.push(row);continue;}
+    row.status="Missing in 2B";row.risk=b.tax;res.push(row);
+  }
+  twob.forEach((t,i)=>{if(!used.has(i))res.push({vendor:t.vendor||"(not in books)",gstin:t.gstin,binv:"",tinv:t.inv,date:t.date,period:t.period,btax:null,ttax:t.tax,diff:null,risk:0,unclaimed:t.tax,status:"Missing in books",invalid:!validGSTIN(t.gstin)});});
+  return res;
+}
+
+/* ---------- synthetic data ---------- */
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function makeSample(){
+  const r=rng(20261029);const pick=a=>a[Math.floor(r()*a.length)];
+  const L="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  const pre=["Shree","Om","Navkar","Sai","Jai Ambe","Krishna","Mahalaxmi","Rathi","Vardhman","Global","Unique","Royal","Prime","Apex","Nova"];
+  const nouns=["Packaging","Steel Traders","Polymers","Logistics","Electricals","Chemicals","Enterprises","Fasteners","Print House","Hardware","Agro Foods","Textiles","Tools","Corrugators","IT Services"];
+  const suf=["Pvt Ltd","LLP","& Co.","Industries"];
+  const states=["24","24","24","27","27","23","07","08","33"];
+  const vendors=[];
+  for(let i=0;i<40;i++){
+    const name=pre[i%15]+" "+nouns[(Math.floor(i/15)*4+i*7)%15]+" "+suf[i%4];
+    let s14=pick(states)+pick(L)+pick(L)+pick(L)+pick(["C","F","P"])+pick(L)+String(1000+Math.floor(r()*9000))+pick(L)+"1Z";
+    vendors.push({name,gstin:s14+gstinCheck(s14),late:r()<0.18,style:Math.floor(r()*3),code:pick(L)+pick(L),seq:Math.floor(r()*400)+10});
+  }
+  const books=[],twob=[];
+  const fmt=(v,seq,alt)=>{if(v.style===0)return alt?`INV-26-27-${seq}`:`INV/26-27/${String(seq).padStart(4,"0")}`;if(v.style===1)return alt?`${v.code.toLowerCase()} ${String(seq).padStart(3,"0")}`:`${v.code}-${seq}`;return alt?`0${seq}`:String(seq);};
+  const p2=n=>String(n).padStart(2,"0");
+  for(const m of [7,8,9]){for(const v of vendors){
+    const n=3+Math.floor(r()*5);
+    for(let k=0;k<n;k++){
+      v.seq++;const day=1+Math.floor(r()*28);const date=`2026-${p2(m)}-${p2(day)}`;const period=`2026-${p2(m)}`;
+      const taxable=Math.round(5000+r()*r()*445000);const rate=r()<0.75?0.18:0.05;const tax=+(taxable*rate).toFixed(2);
+      const b={vendor:v.name,gstin:v.gstin,inv:fmt(v,v.seq,false),date,period,taxable,tax};
+      let t={vendor:v.name,gstin:v.gstin,inv:b.inv,date,period,taxable,tax};
+      const u=r();
+      if(r()<(v.late?0.32:0.025)){t=null;}
+      else if(u<0.06){const f=r()<0.5?0.85+r()*0.1:1.05+r()*0.1;t.taxable=Math.round(taxable*f);t.tax=+(t.taxable*rate).toFixed(2);}
+      else if(u<0.10){t.tax=+(tax+(r()<0.5?-0.5:0.5)).toFixed(2);}
+      else if(u<0.14){t.period=`2026-${p2(m+1)}`;}
+      else if(u<0.17){const pos=7+Math.floor(r()*4);const g=b.gstin.split("");g[pos]=String((+g[pos]+1+Math.floor(r()*8))%10);b.gstin=g.join("");}
+      else if(u<0.25){t.inv=fmt(v,v.seq,true);}
+      else if(u<0.27){t.inv=fmt(v,v.seq+1000,false);if(v.style===2)t.inv=String(v.seq).slice(0,-1)+((+String(v.seq).slice(-1)+3)%10);else t.inv=b.inv.slice(0,-1)+((+b.inv.slice(-1)+3)%10);}
+      books.push(b);if(t)twob.push(t);
+      if(r()<0.012)books.push({...b});
+    }
+  }}
+  for(let x=0;x<24;x++){const v=pick(vendors);const m=7+Math.floor(r()*3);v.seq++;const taxable=Math.round(3000+r()*120000);const tax=+(taxable*0.18).toFixed(2);
+    twob.push({vendor:v.name,gstin:v.gstin,inv:fmt(v,v.seq+5000,false),date:`2026-${p2(m)}-${p2(1+Math.floor(r()*28))}`,period:`2026-${p2(m)}`,taxable,tax});}
+  return {books,twob};
+}
+
+/* ---------- CSV ---------- */
+function parseCSV(text){const rows=[];let row=[],f="",q=false;for(let i=0;i<text.length;i++){const c=text[i];
+  if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++;}else q=false;}else f+=c;}
+  else if(c==='"')q=true;else if(c===","){row.push(f);f="";}else if(c==="\n"||c==="\r"){if(c==="\r"&&text[i+1]==="\n")i++;row.push(f);f="";if(row.some(x=>x.trim()!==""))rows.push(row);row=[];}else f+=c;}
+  row.push(f);if(row.some(x=>x.trim()!==""))rows.push(row);return rows;}
+const ALIAS={gstin:["gstin","supplier_gstin","gstin_of_supplier","party_gstin"],inv:["invoice_no","invoice_number","inv_no","bill_no","invoice"],date:["invoice_date","date","bill_date"],taxable:["taxable_value","taxable","taxable_amount"],tax:["tax_amount","tax","total_tax","igst_cgst_sgst"],vendor:["vendor_name","supplier_name","vendor","party_name","trade_name"],period:["period","return_period"]};
+function parseDate(s){s=String(s||"").trim();let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);if(m)return `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/);if(m)return `${m[3]}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`;return null;}
+function toRecords(text,label){
+  const rows=parseCSV(text);if(rows.length<2)throw new Error(label+" file has no data rows.");
+  const head=rows[0].map(h=>h.trim().toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_|_$/g,""));
+  const col={};for(const k in ALIAS){col[k]=head.findIndex(h=>ALIAS[k].includes(h));}
+  const need={gstin:"gstin",inv:"invoice_no",date:"invoice_date",tax:"tax_amount"};
+  const miss=Object.keys(need).filter(k=>col[k]<0).map(k=>need[k]);
+  if(miss.length)throw new Error(label+" file is missing: "+miss.join(", "));
+  const out=[];rows.slice(1).forEach((r,i)=>{const d=parseDate(r[col.date]);if(!d)throw new Error(`${label} row ${i+2}: date "${r[col.date]}" is not YYYY-MM-DD or DD-MM-YYYY.`);
+    const num=x=>+String(x??"").replace(/[₹,\s]/g,"")||0;
+    let period=d.slice(0,7);if(col.period>=0&&r[col.period]){const p=String(r[col.period]).trim();const mm=p.match(/^(\d{4})-(\d{1,2})$/)||p.match(/^(\d{2})(\d{4})$/);if(mm)period=mm[1].length===4?`${mm[1]}-${mm[2].padStart(2,"0")}`:`${mm[2]}-${mm[1]}`;}
+    out.push({gstin:String(r[col.gstin]).trim().toUpperCase(),inv:String(r[col.inv]).trim(),date:d,period,taxable:col.taxable>=0?num(r[col.taxable]):0,tax:num(r[col.tax]),vendor:col.vendor>=0?String(r[col.vendor]).trim():""});});
+  return out;
+}
+function toCSV(rows,with2b){const h=["vendor_name","gstin","invoice_no","invoice_date","taxable_value","tax_amount"].concat(with2b?["period"]:[]);
+  const q=s=>/[",\n]/.test(s)?`"${String(s).replace(/"/g,'""')}"`:s;
+  return [h.join(",")].concat(rows.map(r=>[r.vendor,r.gstin,r.inv,r.date,r.taxable,r.tax].concat(with2b?[r.period]:[]).map(x=>q(String(x))).join(","))).join("\n");}
+
+/* ---------- state + render ---------- */
+const sample=makeSample();
+let data=sample,results=[],filter="All",shown=40;
+const $=id=>document.getElementById(id);
+const monthOf=r=>+(r.status==="Missing in books"?r.period:r.date).slice(5,7);
+
+function run(){results=reconcile(data.books.map(b=>({...b})),data.twob.map(t=>({...t})),Math.max(0,+$("fTol").value||0));shown=40;render();}
+function view(){const m=$("fMonth").value;return m==="all"?results:results.filter(r=>monthOf(r)===+m);}
+
+function render(){
+  const v=view();
+  const cnt={};ORDER.forEach(s=>cnt[s]=0);v.forEach(r=>cnt[r.status]++);
+  const bookRows=v.filter(r=>r.status!=="Missing in books");
+  const claimed=bookRows.reduce((a,r)=>a+(r.btax||0),0);
+  const risk=v.reduce((a,r)=>a+r.risk,0),unc=v.reduce((a,r)=>a+r.unclaimed,0);
+  const matchRate=bookRows.length?cnt["Matched"]/bookRows.length:0;
+  const vend=vendorTable(v);const follow=vend.filter(x=>x.risk>0).length;
+  $("kpis").innerHTML=[
+    ["Invoices in books",bookRows.length.toLocaleString("en-IN"),""],
+    ["Clean match rate",(matchRate*100).toFixed(1)+"%","ok"],
+    ["ITC claimed in books",inr.format(claimed),""],
+    ["ITC at risk",inr.format(risk),"crit"],
+    ["Unclaimed ITC in 2B",inr.format(unc),"acc"],
+    ["Vendors to follow up",follow,""]
+  ].map(([l,val,c])=>`<div class="kpi ${c}"><span class="l">${l}</span><span class="v">${val}</span></div>`).join("");
+  $("kpiMatch").textContent=(matchRate*100).toFixed(1)+"% on sample";
+
+  // status chart
+  const W=520,rowH=28,lw=140,maxC=Math.max(1,...ORDER.map(s=>cnt[s]));
+  $("chStatus").innerHTML=`<svg viewBox="0 0 ${W} ${ORDER.length*rowH+8}" role="img" aria-label="Rows by status">${ORDER.map((s,i)=>{const w=(W-lw-60)*cnt[s]/maxC;const y=i*rowH+4;
+    return `<text x="0" y="${y+17}">${s}</text><rect x="${lw}" y="${y+4}" width="${W-lw-60}" height="18" rx="3" style="fill:var(--sunk)"/><rect x="${lw}" y="${y+4}" width="${Math.max(w,cnt[s]?2:0)}" height="18" rx="3" style="fill:var(${BAR[STATUS[s].cls]})"/><text x="${lw+w+6}" y="${y+17}" class="num">${cnt[s]}</text>`;}).join("")}</svg>`;
+
+  // month chart (ITC at risk)
+  const ms=[7,8,9];const mr=ms.map(m=>results.filter(r=>monthOf(r)===m).reduce((a,r)=>a+r.risk,0));
+  const H=200,top=24,base=170,mx=Math.max(1,...mr);const sel=$("fMonth").value;
+  $("chMonth").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="ITC at risk by month">
+    <line x1="40" x2="${W-10}" y1="${base}" y2="${base}" style="stroke:var(--line)"/>
+    ${ms.map((m,i)=>{const bw=90,x=70+i*150,h=(base-top)*mr[i]/mx;const on=sel==="all"||+sel===m;
+      return `<rect x="${x}" y="${base-h}" width="${bw}" height="${h}" rx="3" style="fill:var(--crit)" opacity="${on?1:.3}"/><text x="${x+bw/2}" y="${base-h-6}" text-anchor="middle" class="num">${inr.format(mr[i])}</text><text x="${x+bw/2}" y="${base+18}" text-anchor="middle" class="muted">${MONTHS[m]} 2026</text>`;}).join("")}
+  </svg>`;
+
+  // vendor table
+  $("tVendor").innerHTML=`<thead><tr><th>Vendor</th><th>GSTIN</th><th class="r">Invoices</th><th class="r">Clean</th><th class="r">Open issues</th><th class="r">ITC at risk</th><th>Rating</th></tr></thead><tbody>${
+    vend.slice(0,10).map(x=>`<tr><td>${esc(x.vendor)}</td><td class="mono nw">${esc(x.gstin)}</td><td class="r num">${x.n}</td><td class="r num">${(x.clean*100).toFixed(0)}%</td><td class="r num">${x.open}</td><td class="r num">${inr.format(x.risk)}</td><td><span class="pill ${x.rating==="A"?"s-ok":x.rating==="B"?"s-warn":"s-crit"}">${x.rating}</span></td></tr>`).join("")||`<tr><td colspan="7">No vendors in this view.</td></tr>`}</tbody>`;
+
+  // chips
+  $("chips").innerHTML=["All"].concat(ORDER).map(s=>`<button class="chip" aria-pressed="${s===filter}" data-s="${esc(s)}">${esc(s)} <span class="num">${s==="All"?v.length:cnt[s]}</span></button>`).join("");
+  renderRows();
+  $("sumLine").innerHTML=`On ${bookRows.length} sample invoices the engine classified every row, found <b>${inr.format(risk)}</b> of ITC at risk and <b>${inr.format(unc)}</b> of unclaimed credit, and ranked ${follow} vendors for follow-up.`;
+  hypotheses(v);
+}
+function vendorTable(v){const m=new Map();for(const r of v){if(r.status==="Missing in books"&&r.vendor==="(not in books)")continue;const k=r.vendor||r.gstin;const x=m.get(k)||{vendor:k,gstin:r.gstin,n:0,ok:0,open:0,risk:0};
+  if(r.status!=="Missing in books"){x.n++;if(r.status==="Matched"||r.status==="Period mismatch")x.ok++;}
+  if(!["Matched","Period mismatch"].includes(r.status))x.open++;x.risk+=r.risk;m.set(k,x);}
+  return [...m.values()].map(x=>{x.clean=x.n?x.ok/x.n:1;x.rating=x.clean>=.95?"A":x.clean>=.8?"B":"C";return x;}).sort((a,b)=>b.risk-a.risk||a.clean-b.clean);}
+function renderRows(){
+  const q=$("fSearch").value.trim().toLowerCase();
+  let v=view();if(filter!=="All")v=v.filter(r=>r.status===filter);
+  if(q)v=v.filter(r=>(r.vendor+" "+r.gstin+" "+r.binv+" "+r.tinv).toLowerCase().includes(q));
+  v=v.slice().sort((a,b)=>ORDER.indexOf(b.status)-ORDER.indexOf(a.status)||b.risk-a.risk);
+  const money=x=>x==null?"–":inr2.format(x);
+  $("tRows").innerHTML=`<thead><tr><th>Status</th><th>Vendor</th><th>GSTIN</th><th>Invoice (books)</th><th>Invoice (2B)</th><th class="r">Books tax ₹</th><th class="r">2B tax ₹</th><th class="r">At risk ₹</th><th>Next action</th></tr></thead><tbody>${
+    v.slice(0,shown).map(r=>`<tr><td><span class="pill ${STATUS[r.status].cls}">${r.status}</span> <span class="mono" style="color:var(--muted)">${STATUS[r.status].rule}</span></td><td>${esc(r.vendor)}</td><td class="mono nw">${esc(r.gstin)}${r.invalid?' <span class="pill s-crit">Invalid GSTIN</span>':""}${r.note?`<br><span style="color:var(--muted)">${esc(r.note)}</span>`:""}</td><td class="mono nw">${esc(r.binv)||"–"}</td><td class="mono nw">${esc(r.tinv)||"–"}${r.tperiod&&r.status==="Period mismatch"?`<br><span style="color:var(--muted)">2B ${r.tperiod}</span>`:""}</td><td class="r num nw">${money(r.btax)}</td><td class="r num nw">${money(r.ttax)}</td><td class="r num nw">${r.risk?inr2.format(r.risk):"–"}</td><td>${STATUS[r.status].act}</td></tr>`).join("")||`<tr><td colspan="9">No rows match this filter.</td></tr>`}</tbody>`;
+  $("more").hidden=v.length<=shown;$("rowCount").textContent=`Showing ${Math.min(shown,v.length)} of ${v.length} rows`;
+}
+function hypotheses(v){
+  const fmtFixed=v.filter(r=>r.status!=="Missing in books"&&r.binv&&r.tinv&&r.binv!==r.tinv&&normInv(r.binv)===normInv(r.tinv)).length;
+  const raw=v.filter(r=>r.status!=="Missing in books"&&r.binv!==r.tinv).length;
+  const vend=vendorTable(v);const tot=vend.reduce((a,x)=>a+x.risk,0);const top5=vend.slice(0,5).reduce((a,x)=>a+x.risk,0);
+  $("hypoOut").innerHTML=`<b>Sample result.</b> H1: ${fmtFixed} of ${raw} invoices that fail an exact text match are recovered by normalisation alone. H2: the top 5 of ${vend.length} vendors hold ${tot?(top5/tot*100).toFixed(0):0}% of ITC at risk. H3 and H4 need interviews.`;
+}
+
+/* ---------- UAT ---------- */
+function uat(){
+  const G1="24AAACS1234A1Z",g1=G1+gstinCheck(G1),G2="27AABFP5678B1Z",g2=G2+gstinCheck(G2);
+  const swap=g=>{const a=g.split("");a[8]=a[8]==="3"?"4":"3";return a.join("");};
+  const B=(o)=>Object.assign({vendor:"Test Vendor",gstin:g1,inv:"INV/001",date:"2026-08-10",period:"2026-08",taxable:10000,tax:1800},o);
+  const cases=[
+    ["TC-01","US-02","Exact GSTIN and invoice, same tax",[B({})],[B({})],"Matched"],
+    ["TC-02","US-02","\"INV/26-27/0045\" vs \"INV-26-27-45\"",[B({inv:"INV/26-27/0045"})],[B({inv:"INV-26-27-45"})],"Matched"],
+    ["TC-03","US-03","Tax differs by ₹0.80, tolerance ₹1",[B({})],[B({tax:1799.2})],"Matched"],
+    ["TC-04","US-03","Tax differs by ₹250",[B({})],[B({tax:1550})],"Value mismatch"],
+    ["TC-05","US-06","GSTIN differs by one character",[B({gstin:swap(g1)})],[B({})],"GSTIN mismatch"],
+    ["TC-06","US-04","Invoice in books only",[B({})],[B({gstin:g2,inv:"X-9"})],"Missing in 2B"],
+    ["TC-07","US-04","Invoice in 2B only",[],[B({})],"Missing in books"],
+    ["TC-08","US-05","Same invoice booked twice",[B({}),B({})],[B({})],"Duplicate in books"],
+    ["TC-09","US-02","Reported in 2B of the next month",[B({})],[B({period:"2026-09"})],"Period mismatch"],
+    ["TC-10","US-02","Invoice \"INV/0127\" vs \"INV/0128\"",[B({inv:"INV/0127"})],[B({inv:"INV/0128"})],"Probable match"],
+  ];
+  let html="",pass={};
+  for(const [id,us,desc,b,t,exp] of cases){const r=reconcile(b,t,1);const got=exp==="Duplicate in books"?(r.find(x=>x.status===exp)||r[0]).status:r[0].status;const ok=got===exp;pass[id]=ok;
+    html+=`<tr><td class="mono">${id}</td><td>${esc(desc)}</td><td><span class="pill ${STATUS[exp].cls}">${exp}</span></td><td><span class="pill ${STATUS[got].cls}">${got}</span></td><td><span class="pill ${ok?"s-ok":"s-crit"}">${ok?"Pass":"Fail"}</span></td></tr>`;}
+  const inv=swap(g1);const okv=validGSTIN(g1)&&!validGSTIN(inv);pass["TC-11"]=okv;
+  html+=`<tr><td class="mono">TC-11</td><td>Check digit: valid <span class="mono">${g1}</span>, mistyped <span class="mono">${inv}</span></td><td>Valid, then invalid</td><td>${validGSTIN(g1)?"Valid":"Invalid"}, then ${validGSTIN(inv)?"valid":"invalid"}</td><td><span class="pill ${okv?"s-ok":"s-crit"}">${okv?"Pass":"Fail"}</span></td></tr>`;
+  $("uatBody").innerHTML=html;
+  const rtm=[["BO-3","FR-01, FR-02","–","US-01","Upload test (manual)",null],["BO-2","FR-04","BR-01","US-02","TC-01, TC-02","TC-01,TC-02"],["BO-1","FR-06","BR-02, BR-03","US-03","TC-03, TC-04","TC-03,TC-04"],["BO-1","FR-05, FR-07","BR-07, BR-08","US-04","TC-06, TC-07","TC-06,TC-07"],["BO-3","FR-05, FR-08","BR-04, BR-06, BR-09","US-05","TC-08, TC-09, TC-10","TC-08,TC-09,TC-10"],["BO-1","FR-03, FR-05","BR-05, BR-10","US-06","TC-05, TC-11","TC-05,TC-11"]];
+  $("rtmBody").innerHTML=rtm.map(([o,f,b,u,t,k])=>{const st=k?(k.split(",").every(x=>pass[x])?'<span class="pill s-ok">Passed</span>':'<span class="pill s-crit">Failed</span>'):'<span class="pill s-info">Pending</span>';return `<tr><td class="mono">${o}</td><td class="mono">${f}</td><td class="mono">${b}</td><td class="mono">${u}</td><td class="mono">${t}</td><td>${st}</td></tr>`;}).join("");
+}
+
+/* ---------- events ---------- */
+$("fMonth").addEventListener("change",()=>{shown=40;render();});
+$("fTol").addEventListener("input",run);
+$("fSearch").addEventListener("input",()=>{shown=40;renderRows();});
+$("chips").addEventListener("click",e=>{const b=e.target.closest("button[data-s]");if(!b)return;filter=b.dataset.s;shown=40;render();});
+$("more").addEventListener("click",()=>{shown+=40;renderRows();});
+const readFile=f=>new Promise((ok,no)=>{const fr=new FileReader();fr.onload=()=>ok(fr.result);fr.onerror=()=>no(new Error("Could not read "+f.name));fr.readAsText(f);});
+$("runUp").addEventListener("click",async()=>{const m=$("upMsg");m.className="msg";
+  const fb=$("upBooks").files[0],ft=$("up2b").files[0];
+  if(!fb||!ft){m.className="msg err";m.textContent="Choose both files: the purchase register and the GSTR-2B export.";return;}
+  try{const books=toRecords(await readFile(fb),"Register"),twob=toRecords(await readFile(ft),"2B");
+    data={books,twob};filter="All";$("fMonth").value="all";run();$("srcLabel").textContent="Your files";
+    m.className="msg okm";m.textContent=`Reconciled ${books.length} register rows against ${twob.length} 2B rows. The month filter covers Jul–Sep 2026; use "Jul – Sep 2026" to see everything.`;
+  }catch(err){m.className="msg err";m.textContent=err.message;}
+});
+$("resetSample").addEventListener("click",()=>{data=sample;filter="All";run();$("srcLabel").textContent="Sample data";$("upMsg").textContent="";});
+function copy(text,label){const m=$("upMsg");const done=()=>{m.className="msg okm";m.textContent=label+" copied. Paste it into a text editor and save as .csv.";};
+  try{navigator.clipboard.writeText(text).then(done,()=>{m.className="msg err";m.textContent="Copy was blocked by this viewer.";});}catch(e){m.className="msg err";m.textContent="Copy was blocked by this viewer.";}}
+$("copyBooks").addEventListener("click",()=>copy(toCSV(sample.books.slice(0,60),false),"Sample register (60 rows)"));
+$("copy2b").addEventListener("click",()=>copy(toCSV(sample.twob.slice(0,60),true),"Sample 2B (60 rows)"));
+
+run();uat();
+})();
+</script>
+
+<script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";mermaid.initialize({startOnLoad:true,theme:matchMedia("(prefers-color-scheme: dark)").matches?"dark":"default"});</script>
+</html>
